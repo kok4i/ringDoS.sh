@@ -5,6 +5,22 @@
 # Create output directory
 sudo mkdir /tmp/rdos/
 
+# ASCII art
+ascii_art() {
+printf "
+        __   _             _____        _____      _     
+       / /  (_)           |  __ \      / ____|    | |    
+      / / __ _ _ __   __ _| |  | | ___| (___   ___| |__  
+     / / '__| | '_ \ / _` | |  | |/ _ \\___ \ / __| '_ \ 
+  _ / /| |  | | | | | (_| | |__| | (_) |___) |\__ \ | | |
+ (_)_/ |_|  |_|_| |_|\__, |_____/ \___/_____(_)___/_| |_|
+                      __/ |                              
+                     |___/   
+"
+}
+
+
+
 # Function to run when Ctrl+C is pressed
 custom_interrupt() {
     clear
