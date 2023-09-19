@@ -116,6 +116,7 @@ else
     custom_exit
 fi
 
+# Grabs the users new wireless interface that is in monitor mode
 INF=$(sudo airmon-ng start $ITMP | grep -oP '\b\w+mon\b' | awk '!/airmon|daemon/')
 sleep 1; clear
 
@@ -123,7 +124,7 @@ sleep 1; clear
 airodump_scan
 
 # Search for ring devices
-# Check if any devices match the filter
+# Check if any devices don't match the filter
 if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
     while true; do
         clear
@@ -136,7 +137,7 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
                 sudo rm -r /tmp/rdos/airodump*
                 # Start airodump-ng
                 airodump_scan
-                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
+                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then # Check if devices match the filter
                     clear
                     printf '\e[31;1mRing devices found!\n\e[0m'
                     sleep 1
