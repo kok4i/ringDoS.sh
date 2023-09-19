@@ -137,6 +137,9 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
                 # Start airodump-ng
                 airodump_scan
                 if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
+                    clear
+                    printf '\e[31;1mRing devices found!\n\e[0m'
+                    sleep 1
                     break
                 fi
                 ;;
