@@ -7,7 +7,7 @@ sudo mkdir /tmp/rdos/
 
 # ASCII art
 ascii_art() {
-cat << "EOF"
+    cat << "EOF"
        __   _             _____        _____      _        
       / /  (_)           |  __ \      / ____|    | |       
      / / __ _ _ __   __ _| |  | | ___| (___   ___| |__     
@@ -15,9 +15,12 @@ cat << "EOF"
  _ / /| |  | | | | | (_| | |__| | (_) |___) |\__ \ | | |   
 (_)_/ |_|  |_|_| |_|\__, |_____/ \___/_____(_)___/_| |_|   
                       __/ |                                 
-                     |___/          
-EOF                        
+                     |___/
+EOF
 }
+
+# Call the function to display the ASCII art
+ascii_art
 
 
 
