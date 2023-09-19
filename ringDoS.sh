@@ -1,5 +1,6 @@
 #!/bin/bash
 # Interactive script for sending disassociation packets to ring devices
+# Credit https://github.com/kok4i/
 
 # Create output directory
 sudo mkdir /tmp/rdos/
