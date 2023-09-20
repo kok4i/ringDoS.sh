@@ -210,6 +210,7 @@ while true; do
         done
     else
         printf "Dissasociation attack completed successfully"
+        custom_exit
         break
     fi
 done
