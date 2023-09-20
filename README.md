@@ -15,7 +15,10 @@ apt install aircrack-ng
 apt install iwconfig
 ```
   
-Arch Linux Install
+Arch Linux Install  
+*Note: If you aren't already running BlackArch Linux, in order to install aircrack-ng you need to have the BlackArch repository installed. Refer to the links below.*  
+https://archstrike.org  
+https://blackarch.org/index.html
 ```
 pacman -S aircrack-ng
 ```
