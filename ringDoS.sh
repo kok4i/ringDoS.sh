@@ -139,7 +139,7 @@ airodump_scan
 if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
     while true; do
         clear
-        print_centered_text '\e[1;31mNo ring devices found!\e[0m'
+        print_centered_text '\e[1;31mNo ring devices found!\e[0m\n'
         sleep 2
         read -p "Do you want to run the scan again?[y/n]: " choice1
         case "$choice1" in
@@ -209,7 +209,7 @@ while true; do
             esac
         done
     else
-        printf "Dissasociation attack completed successfully"
+        printf "Dissasociation attack completed successfully\n"
         custom_exit
         break
     fi
