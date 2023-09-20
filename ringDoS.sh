@@ -182,7 +182,7 @@ aireplay_attack
 CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
 if [ -z "$CHNL" ]; then
     while true; do
-        printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n"
+        printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n If you continue, \e[1$INF\e[0m will stay as it is and not be swapped to a specific channel.\n"
         read -p "Would you like to go back?[y/n]: " choice2
         case "$choice2" in
             [Yy]*)
