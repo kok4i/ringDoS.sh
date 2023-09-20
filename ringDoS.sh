@@ -143,6 +143,7 @@ if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/
     while true; do
         clear
         print_centered_text '\e[1;31mNo ring devices found!\e[0m\n'
+        clear
         sleep 2
         read -p "Do you want to run the scan again?[y/n]: " choice1
         case "$choice1" in
@@ -183,22 +184,22 @@ if [ -z "$CHNL" ]; then
     while true; do
         printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n"
         printf "Would you like to continue or go back?[y/n]: " choice2
-        case "$choice3" in
-                [Yy]*)
-                    printf "Returning to aireplay attack prompt.\n"
-                    clear
-                    aireplay_attack
-                    if [ ! -z "$CHNL" ]; then
-                        break
-                    fi
-                    ;;
-                [Nn]*)
-                    custom_exit
-                    ;;
-                *)
-                    printf "Invalid choice. Please enter 'y' or 'n'.\n"
-            esac
-        done
+        case "$choice2" in
+            [Yy]*)
+                printf "Returning to aireplay attack prompt.\n"
+                clear
+                aireplay_attack
+                if [ ! -z "$CHNL" ]; then
+                    break
+                fi
+                ;;
+            [Nn]*)
+                custom_exit
+                ;;
+            *)
+                printf "Invalid choice. Please enter 'y' or 'n'.\n"
+        esac
+    done
 else
     printf "Setting the monitor channel to the same channel the target AP is on...\n"
     sudo airmon-ng stop $INF 
