@@ -183,7 +183,7 @@ CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = g
 if [ -z "$CHNL" ]; then
     while true; do
         printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n"
-        printf "Would you like to continue or go back?[y/n]: " choice2
+        read -p "Would you like to continue or go back?[y/n]: " choice2
         case "$choice2" in
             [Yy]*)
                 printf "Returning to aireplay attack prompt.\n"
