@@ -175,47 +175,48 @@ clear
 
 # Pre aireplay attack function
 pre_aireplay_attack() {
-    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
-    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
+    bssid_mac_select() {
+        printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
+        grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
 
-    # Function to validate if a string is a valid MAC address
-    is_valid_mac() {
-        local mac="$1"
-        # Use a regular expression to match the MAC address format
-        if [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
-            return 0  # Valid MAC address
-        else
-            return 1  # Invalid MAC address
-        fi
+        # Function to validate if a string is a valid MAC address
+        is_valid_mac() {
+            local mac="$1"
+            # Use a regular expression to match the MAC address format
+            if [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
+                return 0  # Valid MAC address
+            else
+                return 1  # Invalid MAC address
+            fi
+        }
+
+        while true; do
+            read -p "Enter BSSID of target: " BSSID
+            read -p "Enter MAC of target: " MAC
+
+            bssid_valid=0
+            mac_valid=0
+
+            # Check if BSSID is a valid MAC address
+            if is_valid_mac "$BSSID"; then
+                bssid_valid=1
+            else
+                printf "Invalid BSSID. Please enter a valid MAC address.\n"
+            fi
+
+            # Check if MAC is a valid MAC address
+            if is_valid_mac "$MAC"; then
+                mac_valid=1
+            else
+                printf "Invalid MAC address. Please enter a valid MAC address.\n"
+            fi
+
+            # Check both validity conditions
+            if [ $bssid_valid -eq 1 ] && [ $mac_valid -eq 1 ]; then
+                break  # Exit the loop when both are valid
+            fi
+        done
     }
-
-    while true; do
-        read -p "Enter BSSID of target: " BSSID
-        read -p "Enter MAC of target: " MAC
-
-        bssid_valid=0
-        mac_valid=0
-
-        # Check if BSSID is a valid MAC address
-        if is_valid_mac "$BSSID"; then
-            bssid_valid=1
-        else
-            printf "Invalid BSSID. Please enter a valid MAC address.\n"
-        fi
-
-        # Check if MAC is a valid MAC address
-        if is_valid_mac "$MAC"; then
-            mac_valid=1
-        else
-            printf "Invalid MAC address. Please enter a valid MAC address.\n"
-        fi
-
-        # Check both validity conditions
-        if [ $bssid_valid -eq 1 ] && [ $mac_valid -eq 1 ]; then
-            break  # Exit the loop when both are valid
-        fi
-    done
-
     CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
     if [ -z "$CHNL" ]; then
         while true; do
@@ -225,10 +226,7 @@ pre_aireplay_attack() {
                 [Yy]*)
                     echo "Returning to aireplay attack prompt."
                     clear
-                    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
-                    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
-                    read -p "Enter BSSID of target: " BSSID
-                    read -p "Enter MAC of target: " MAC
+                    bssid_mac_select
                     if [ ! -z "$CHNL" ]; then
                         break
                     fi
