@@ -221,6 +221,7 @@ pre_aireplay_attack() {
             fi
         done
     }
+    bssid_mac_select
     CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); if (channel <= 13) print channel}' /tmp/rdos/airodump*.csv)
     if [ -z "$CHNL" ]; then
         while true; do
