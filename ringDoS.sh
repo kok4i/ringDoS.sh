@@ -255,12 +255,15 @@ pre_aireplay_attack() {
             case "$choice3" in
                 [Ff]*)
                     packetct=25
+                    break
                     ;;
                 [Mm]*)
                     packetct=100
+                    break
                     ;;
                 [Cc]*)
                     packetct=$choice3
+                    break
                     ;;
                 *)
                     echo "Invalid choice. Please enter 'f' 'm' or 'c'."
