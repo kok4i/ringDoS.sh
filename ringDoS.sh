@@ -220,29 +220,8 @@ aireplay_attack() {
         done
     }
     bssid_mac_select
-    CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4])}' /tmp/rdos/airodump*.csv)
-    # if [ -z "$CHNL" ]; then
-    #     while true; do
-    #         printf "Note: The BSSID specfied isn't on a channel which may mean there was an error in selecting the BSSID.\n If you continue, \e[1;$INF\e[0m will stay as it is and not be swapped to a specific channel.\n"
-    #         read -p "Would you like to go back?[y/n]: " choice2
-    #         case "$choice2" in
-    #             [Yy]*)
-    #                 echo "Returning to aireplay attack prompt."
-    #                 clear
-    #                 bssid_mac_select
-    #                 if [ ! -z "$CHNL" ]; then
-    #                     break
-    #                 fi
-    #                 ;;
-    #             [Nn]*)
-    #                 break
-    #                 ;;
-    #             *)
-    #                 printf "Invalid choice. Please enter 'y' or 'n'.\n"
-    #         esac
-    #     done
-    # else
-        # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
+    CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); print channel}' /tmp/rdos/airodump*.csv)
+    # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
     while true; do
         clear
         echo "*********************"
