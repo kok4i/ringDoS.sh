@@ -250,18 +250,18 @@ aireplay_attack() {
             echo "[M] Many (100)"
             echo "[C] Custom"
             echo "*********************"
-            read -p "How many dissasociation packets do you want to send to $MAC?" choice3
+            read -p "How many dissasociation packets do you want to send to $MAC?: " choice3
             case "$choice3" in
                 [Ff]*)
-                    packetct=25
+                    packetct="25"
                     break
                     ;;
                 [Mm]*)
-                    packetct=100
+                    packetct="100"
                     break
                     ;;
                 [Cc]*)
-                    packetct=$choice3
+                    read -p "Enter amount: " packetct
                     break
                     ;;
                 *)
@@ -319,7 +319,7 @@ while true; do
         echo "2. Run Aireplay Attack Again"
         echo "3. Quit"
         echo "**********************************************"
-        read -p "You have reached the end of this script. Select the next option:" choice5
+        read -p "You have reached the end of this script. Select the next option: " choice5
     }    
     display_menu
     case "$choice5" in
@@ -327,7 +327,7 @@ while true; do
             clear
             printf "Restarting the script...\n"
             sleep 2
-            sudo rm -rf /tmp/rdos > /dev/null 2>&1
+            sudo rm -r /tmp/rdos/airodump* > /dev/null 2>&1
             printf "Setting $INF to station mode.\n"
             sudo airmon-ng stop $INF > /dev/null 2>&1
             printf "Setting $ITMP to monitor mode.\n"
