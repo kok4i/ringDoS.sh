@@ -246,6 +246,7 @@ pre_aireplay_attack() {
     else
         # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
         while true; do
+            clear
             echo "*********************"
             echo "[F] A few (25)"
             echo "[M] Many (100)"
