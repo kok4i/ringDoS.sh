@@ -244,30 +244,30 @@ aireplay_attack() {
     # else
         # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
     while true; do
-            clear
-            echo "*********************"
-            echo "[F] A few (25)"
-            echo "[M] Many (100)"
-            echo "[C] Custom"
-            echo "*********************"
-            read -p "How many dissasociation packets do you want to send to $MAC?: " choice3
-            case "$choice3" in
-                [Ff]*)
-                    packetct="25"
-                    break
-                    ;;
-                [Mm]*)
-                    packetct="100"
-                    break
-                    ;;
-                [Cc]*)
-                    read -p "Enter amount: " packetct
-                    break
-                    ;;
-                *)
-                    echo "Invalid choice. Please enter 'f' 'm' or 'c'."
-            esac
-        done
+        clear
+        echo "*********************"
+        echo "[F] A few (25)"
+        echo "[M] Many (100)"
+        echo "[C] Custom"
+        echo "*********************"
+        read -p "How many dissasociation packets do you want to send to $MAC?: " choice3
+        case "$choice3" in
+            [Ff]*)
+                packetct="25"
+                break
+                ;;
+            [Mm]*)
+                packetct="100"
+                break
+                ;;
+            [Cc]*)
+                read -p "Enter amount: " packetct
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please enter 'f' 'm' or 'c'."
+        esac
+    done
     ## TEST
     printf $packetct
     ## TEST
