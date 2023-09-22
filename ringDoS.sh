@@ -118,6 +118,7 @@ while true; do
     else
         printf "Invalid choice. Please enter a valid number.\n"
     fi
+done
 
 # Grabs the users new wireless interface that is in monitor mode
 INF=$(sudo airmon-ng start $ITMP | grep -oP '\b\w+mon\b' | awk '!/airmon|daemon/')
