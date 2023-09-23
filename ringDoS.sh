@@ -220,6 +220,7 @@ aireplay_attack() {
         done
     }
     bssid_mac_select
+    ## TRY USING IWLIST command
     CHNL=$(awk -F, -v BSSID="$BSSID" '$0 ~ BSSID {split($0, fields, ",");channel = gensub(/[^0-9]+/, "", "g", fields[4]); print channel}' /tmp/rdos/airodump*.csv)
     # put aireplay deauth packet count here selection!!!!!!!!!!!!!!!!
     while true; do
